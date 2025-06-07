@@ -1,83 +1,173 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
+import { Award, BookOpen } from "lucide-react"
 
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
+  const [view, setView] = useState("month")
 
   // Mock data - in a real app this would come from your database
   const events = [
-    { date: "2025-05-22", title: "Texas License Renewal", type: "renewal" },
-    { date: "2025-08-15", title: "Florida License Renewal", type: "renewal" },
-    { date: "2024-12-01", title: "California License Renewal", type: "renewal" },
-    { date: "2025-02-15", title: "Florida CE Deadline", type: "ce" },
+    {
+      id: 1,
+      title: "Texas License Renewal",
+      date: new Date(2025, 4, 22), // May 22, 2025
+      type: "renewal",
+      description: "Texas Independent Adjuster License renewal due",
+    },
+    {
+      id: 2,
+      title: "Florida CE Deadline",
+      date: new Date(2025, 1, 15), // Feb 15, 2025
+      type: "ce",
+      description: "Complete remaining 12 CE credits for Florida license",
+    },
+    {
+      id: 3,
+      title: "Ethics Course",
+      date: new Date(2024, 3, 10), // April 10, 2024
+      type: "course",
+      description: "Registered for Ethics for Insurance Professionals course",
+    },
   ]
 
-  const getEventsForDate = (d: Date) => {
-    const dateString = d.toISOString().split("T")[0]
-    return events.filter((event) => event.date === dateString)
+  // Function to highlight dates with events
+  const isDayWithEvent = (day: Date) => {
+    return events.some(
+      (event) =>
+        day.getDate() === event.date.getDate() &&
+        day.getMonth() === event.date.getMonth() &&
+        day.getFullYear() === event.date.getFullYear(),
+    )
   }
+
+  // Get events for the selected date
+  const selectedDateEvents = date
+    ? events.filter(
+        (event) =>
+          date.getDate() === event.date.getDate() &&
+          date.getMonth() === event.date.getMonth() &&
+          date.getFullYear() === event.date.getFullYear(),
+      )
+    : []
 
   return (
     <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">Calendar</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="w-full"
-                components={{
-                  DayContent: ({ date }) => {
-                    const dailyEvents = getEventsForDate(date)
-                    return (
-                      <div className="relative h-full w-full">
-                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                          {date.getDate()}
-                        </span>
-                        {dailyEvents.length > 0 && (
-                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-                            {dailyEvents.map((event) => (
-                              <div
-                                key={event.title}
-                                className={`h-1.5 w-1.5 rounded-full ${event.type === "renewal" ? "bg-red-500" : "bg-blue-500"}`}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  },
-                }}
-              />
-            </CardContent>
-          </Card>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Calendar</h1>
+        <div className="flex items-center gap-2">
+          <Select value={view} onValueChange={setView}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="View" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="month">Month</SelectItem>
+              <SelectItem value="week">Week</SelectItem>
+              <SelectItem value="day">Day</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button>Today</Button>
         </div>
-        <div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+        <Card>
+          <CardHeader>
+            <CardTitle>License and CE Calendar</CardTitle>
+            <CardDescription>View your upcoming license renewals and CE deadlines</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className="rounded-md border"
+              modifiers={{
+                event: (day) => isDayWithEvent(day),
+              }}
+              modifiersStyles={{
+                event: {
+                  fontWeight: "bold",
+                  backgroundColor: "var(--primary-50)",
+                  borderBottom: "2px solid var(--primary)",
+                },
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Events for {date ? date.toLocaleDateString() : "selected date"}</CardTitle>
+              <CardTitle>Selected Date</CardTitle>
+              <CardDescription>
+                {date
+                  ? date.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "No date selected"}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {date && getEventsForDate(date).length > 0 ? (
-                <ul className="space-y-2">
-                  {getEventsForDate(date).map((event) => (
-                    <li key={event.title} className="flex items-center gap-2">
-                      <div
-                        className={`h-2 w-2 rounded-full ${event.type === "renewal" ? "bg-red-500" : "bg-blue-500"}`}
-                      />
-                      <span>{event.title}</span>
-                    </li>
+              {selectedDateEvents.length > 0 ? (
+                <div className="space-y-4">
+                  {selectedDateEvents.map((event) => (
+                    <div key={event.id} className="flex items-start gap-3 border-b pb-3 last:border-0 last:pb-0">
+                      <div className="rounded-full bg-primary/10 p-2">
+                        {event.type === "renewal" ? (
+                          <Award className="h-4 w-4 text-primary" />
+                        ) : (
+                          <BookOpen className="h-4 w-4 text-primary" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">{event.title}</p>
+                        <p className="text-sm text-muted-foreground">{event.description}</p>
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               ) : (
-                <p className="text-muted-foreground">No events for this date.</p>
+                <p className="text-center text-muted-foreground py-4">No events for this date</p>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Events</CardTitle>
+              <CardDescription>Your next deadlines and important dates</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {events
+                  .filter((event) => event.date >= new Date())
+                  .sort((a, b) => a.date.getTime() - b.date.getTime())
+                  .slice(0, 3)
+                  .map((event) => (
+                    <div key={event.id} className="flex items-start gap-3 border-b pb-3 last:border-0 last:pb-0">
+                      <div className="rounded-full bg-primary/10 p-2">
+                        {event.type === "renewal" ? (
+                          <Award className="h-4 w-4 text-primary" />
+                        ) : (
+                          <BookOpen className="h-4 w-4 text-primary" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">{event.title}</p>
+                        <p className="text-sm text-muted-foreground">{event.date.toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </CardContent>
           </Card>
         </div>
