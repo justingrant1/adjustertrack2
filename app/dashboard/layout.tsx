@@ -15,6 +15,22 @@ export default function DashboardLayout({
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
 
+  // Function to validate session
+  const isValidSession = (session: any) => {
+    if (!session || !session.expires_at) return false
+    
+    const now = Date.now()
+    const expiresAt = new Date(session.expires_at * 1000).getTime()
+    
+    console.log("Dashboard session validation:", {
+      now: new Date(now).toLocaleString(),
+      expires_at: new Date(expiresAt).toLocaleString(),
+      isValid: expiresAt > now
+    })
+    
+    return expiresAt > now
+  }
+
   useEffect(() => {
     console.log("Dashboard layout mounted")
     
@@ -34,9 +50,16 @@ export default function DashboardLayout({
           return
         }
 
+        if (!isValidSession(session)) {
+          console.log("Expired session in dashboard, signing out and redirecting")
+          await supabase.auth.signOut()
+          window.location.href = "/login"
+          return
+        }
+
         console.log("Valid session in dashboard:", {
           user: session.user.email,
-          expires_at: new Date(session.expires_at!).toLocaleString()
+          expires_at: session.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'unknown'
         })
 
         // Set up auth state change listener
@@ -44,7 +67,7 @@ export default function DashboardLayout({
           data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
           console.log("Auth state changed in dashboard:", event, session?.user?.email)
-          if (event === 'SIGNED_OUT' || !session) {
+          if (event === 'SIGNED_OUT' || !session || !isValidSession(session)) {
             window.location.href = "/login"
           }
         })

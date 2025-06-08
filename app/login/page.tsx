@@ -20,6 +20,22 @@ export default function Login() {
   const [error, setError] = useState("")
   const [successMessage, setSuccessMessage] = useState("")
 
+  // Function to validate session
+  const isValidSession = (session: any) => {
+    if (!session || !session.expires_at) return false
+    
+    const now = Date.now()
+    const expiresAt = new Date(session.expires_at * 1000).getTime()
+    
+    console.log("Session validation:", {
+      now: new Date(now).toLocaleString(),
+      expires_at: new Date(expiresAt).toLocaleString(),
+      isValid: expiresAt > now
+    })
+    
+    return expiresAt > now
+  }
+
   // Function to handle navigation
   const navigateToDashboard = () => {
     console.log("Attempting navigation to dashboard...")
@@ -32,12 +48,15 @@ export default function Login() {
         const { data: { session }, error } = await supabase.auth.getSession()
         if (error) throw error
         
-        if (session) {
-          console.log("Session found in login page:", {
+        if (session && isValidSession(session)) {
+          console.log("Valid session found in login page:", {
             user: session.user.email,
-            expires_at: new Date(session.expires_at!).toLocaleString()
+            expires_at: session.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'unknown'
           })
           navigateToDashboard()
+        } else if (session) {
+          console.log("Expired session found, signing out...")
+          await supabase.auth.signOut()
         }
       } catch (error) {
         console.error("Error checking session:", error)
@@ -68,9 +87,14 @@ export default function Login() {
         throw new Error("No session created")
       }
 
+      // Validate the new session
+      if (!isValidSession(data.session)) {
+        throw new Error("Invalid session created")
+      }
+
       console.log("Login successful:", {
         user: data.session.user.email,
-        expires_at: new Date(data.session.expires_at!).toLocaleString()
+        expires_at: data.session.expires_at ? new Date(data.session.expires_at * 1000).toLocaleString() : 'unknown'
       })
 
       setSuccessMessage("Login successful! Redirecting...")
