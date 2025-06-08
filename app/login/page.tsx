@@ -19,42 +19,56 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        router.push("/dashboard")
-      }
-    }
-    checkSession()
-  }, [router])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
     try {
+      // First, check if the user exists
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      console.log("Current user:", user)
+
+      // Attempt to sign in
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim().toLowerCase(),
         password,
       })
 
       if (signInError) {
-        console.error("Login error:", signInError)
+        console.error("Sign in error:", signInError)
         throw signInError
       }
 
-      if (!data.session) {
-        throw new Error("No session created after login")
+      if (!data?.session) {
+        console.error("No session after sign in")
+        throw new Error("Failed to create session")
       }
 
-      // Force a router refresh to update the session state
-      router.refresh()
-      router.push("/dashboard")
+      console.log("Sign in successful:", data.session)
+
+      // Update the session
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
+
+      if (sessionError) {
+        console.error("Session error:", sessionError)
+        throw sessionError
+      }
+
+      if (!session) {
+        console.error("No session found after getSession")
+        throw new Error("Session not established")
+      }
+
+      console.log("Session established:", session)
+
+      // Force a hard navigation to the dashboard
+      window.location.href = "/dashboard"
     } catch (err: any) {
-      console.error("Login error:", err)
+      console.error("Login process error:", err)
       setError(err.message || "Failed to sign in")
     } finally {
       setIsLoading(false)
