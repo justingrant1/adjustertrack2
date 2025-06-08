@@ -38,7 +38,6 @@ type License = {
   license_number: string
   license_type: string
   expiration_date: string
-  issue_date: string
   notes: string
 }
 
@@ -55,7 +54,6 @@ export default function LicensesPage() {
     license_number: "",
     license_type: "",
     expiration_date: "",
-    issue_date: "",
     notes: "",
   })
   const [editFormData, setEditFormData] = useState<Partial<License>>({})
@@ -213,7 +211,6 @@ export default function LicensesPage() {
         license_number: "",
         license_type: "",
         expiration_date: "",
-        issue_date: "",
         notes: "",
       })
     }
@@ -252,10 +249,6 @@ export default function LicensesPage() {
                   <Input id="licenseNumber" value={newLicenseFormData.license_number} onChange={(e) => setNewLicenseFormData({ ...newLicenseFormData, license_number: e.target.value })} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="issueDate">Issue Date</Label>
-                    <Input id="issueDate" type="date" value={newLicenseFormData.issue_date} onChange={(e) => setNewLicenseFormData({ ...newLicenseFormData, issue_date: e.target.value })} />
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="expirationDate">Expiration Date</Label>
                     <Input id="expirationDate" type="date" value={newLicenseFormData.expiration_date} onChange={(e) => setNewLicenseFormData({ ...newLicenseFormData, expiration_date: e.target.value })} />
@@ -309,10 +302,6 @@ export default function LicensesPage() {
                         </h3>
                         <p className="text-sm text-muted-foreground">License #: {license.license_number}</p>
                         <div className="flex flex-wrap gap-4 mt-2">
-                          <div>
-                            <p className="text-xs text-muted-foreground">Issue Date</p>
-                            <p className="text-sm">{new Date(license.issue_date).toLocaleDateString()}</p>
-                          </div>
                           <div>
                             <p className="text-xs text-muted-foreground">Expiration Date</p>
                             <p className="text-sm">{new Date(license.expiration_date).toLocaleDateString()}</p>
@@ -416,10 +405,6 @@ export default function LicensesPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-medium mb-1">Issue Date</h3>
-                  <p>{new Date(selectedLicense.issue_date).toLocaleDateString()}</p>
-                </div>
-                <div>
                   <h3 className="text-sm font-medium mb-1">Expiration Date</h3>
                   <p>{new Date(selectedLicense.expiration_date).toLocaleDateString()}</p>
                 </div>
@@ -472,15 +457,6 @@ export default function LicensesPage() {
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-issueDate">Issue Date</Label>
-                  <Input
-                    id="edit-issueDate"
-                    type="date"
-                    value={editFormData.issue_date}
-                    onChange={(e) => setEditFormData({ ...editFormData, issue_date: e.target.value })}
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-expirationDate">Expiration Date</Label>
                   <Input
