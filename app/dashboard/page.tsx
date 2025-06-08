@@ -122,22 +122,36 @@ export default function Dashboard() {
                 <CardDescription>Overview of your current licenses and their status</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {licenses.map((license) => (
-                    <div key={license.id} className="flex flex-col space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">
-                            {license.state} - {license.license_type}
-                          </p>
-                          <p className="text-sm text-muted-foreground">License #: {license.license_number}</p>
+                <div className="space-y-6">
+                  {licenses.map((license) => {
+                    // Calculate CE progress
+                    // Find all education credits for this license (by state and type)
+                    // This assumes you have education credits with a license_id or similar, otherwise you may need to filter by state/type
+                    // For now, sum all credits for the user
+                    const ceCompleted = 0; // TODO: Replace with actual calculation
+                    const ceRequired = license.ce_requirement || 0;
+                    return (
+                      <div key={license.id} className="pb-4 border-b last:border-b-0">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-lg">
+                              {license.state} - {license.license_type}
+                            </p>
+                            <p className="text-sm text-muted-foreground">License #: {license.license_number}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm">Expires: {new Date(license.expiration_date).toLocaleDateString()}</p>
+                            <span className="inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm">Expires: {new Date(license.expiration_date).toLocaleDateString()}</p>
+                        <div className="mt-2">
+                          <p className="text-sm font-medium">CE Progress</p>
+                          <Progress value={ceCompleted} max={ceRequired} className="h-3 rounded-full bg-gray-200" />
+                          <p className="text-sm mt-1">{ceCompleted}/{ceRequired} credits</p>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
