@@ -33,24 +33,36 @@ export default function Signup() {
     setError("")
     setIsLoading(true)
 
-    const { error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+    try {
+      // First sign up the user
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-      },
-    })
+      })
 
-    setIsLoading(false)
-    if (error) {
-      setError(error.message)
-    } else {
-      // On successful signup, Supabase sends a confirmation email.
-      // You might want to show a message to the user to check their email.
+      if (signUpError) throw signUpError
+
+      // Immediately sign in the user
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      })
+
+      if (signInError) throw signInError
+
+      // Redirect to dashboard on success
       router.push("/dashboard")
+    } catch (error: any) {
+      setError(error.message)
+    } finally {
+      setIsLoading(false)
     }
   }
 
