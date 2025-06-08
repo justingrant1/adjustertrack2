@@ -39,7 +39,6 @@ type License = {
   license_type: string
   expiration_date: string
   issue_date: string
-  ce_required: number
   notes: string
 }
 
@@ -57,7 +56,6 @@ export default function LicensesPage() {
     license_type: "",
     expiration_date: "",
     issue_date: "",
-    ce_required: 0,
     notes: "",
   })
   const [editFormData, setEditFormData] = useState<Partial<License>>({})
@@ -216,7 +214,6 @@ export default function LicensesPage() {
         license_type: "",
         expiration_date: "",
         issue_date: "",
-        ce_required: 0,
         notes: "",
       })
     }
@@ -263,10 +260,6 @@ export default function LicensesPage() {
                     <Label htmlFor="expirationDate">Expiration Date</Label>
                     <Input id="expirationDate" type="date" value={newLicenseFormData.expiration_date} onChange={(e) => setNewLicenseFormData({ ...newLicenseFormData, expiration_date: e.target.value })} />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ceRequirement">CE Requirement (Credits)</Label>
-                  <Input id="ceRequirement" type="number" min="0" value={newLicenseFormData.ce_required} onChange={(e) => setNewLicenseFormData({ ...newLicenseFormData, ce_required: Number(e.target.value) })} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
@@ -432,17 +425,6 @@ export default function LicensesPage() {
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-medium mb-1">CE Requirements</h3>
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <p>Required</p>
-                    <p>
-                      {selectedLicense.ce_required} credits
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div>
                 <h3 className="text-sm font-medium mb-1">Notes</h3>
                 <p className="text-sm text-muted-foreground">{selectedLicense.notes || "No notes available."}</p>
               </div>
@@ -510,16 +492,6 @@ export default function LicensesPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-ceRequired">CE Required</Label>
-                  <Input
-                    id="edit-ceRequired"
-                    type="number"
-                    min="0"
-                    value={editFormData.ce_required}
-                    onChange={(e) => setEditFormData({ ...editFormData, ce_required: Number(e.target.value) })}
-                  />
-                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-notes">Notes</Label>
@@ -561,9 +533,7 @@ export default function LicensesPage() {
                     <h3 className="text-sm font-medium text-amber-800">Renewal Information</h3>
                     <div className="mt-2 text-sm text-amber-700">
                       <p>
-                        Your license will be renewed for 2 years from the current expiration date. CE credits will be
-                        reset to 0 and you will need to complete {selectedLicense.ce_required} credits before the next
-                        renewal.
+                        Your license will be renewed for 2 years from the current expiration date.
                       </p>
                     </div>
                   </div>
