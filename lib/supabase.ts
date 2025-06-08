@@ -15,7 +15,21 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: 'pkce'
-    }
+      storageKey: 'supabase.auth.token',
+      storage: {
+        getItem: (key) => {
+          if (typeof window === 'undefined') return null
+          return JSON.parse(window.localStorage.getItem(key) || 'null')
+        },
+        setItem: (key, value) => {
+          if (typeof window === 'undefined') return
+          window.localStorage.setItem(key, JSON.stringify(value))
+        },
+        removeItem: (key) => {
+          if (typeof window === 'undefined') return
+          window.localStorage.removeItem(key)
+        },
+      },
+    },
   }
 ) 

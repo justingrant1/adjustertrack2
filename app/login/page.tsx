@@ -20,34 +20,17 @@ export default function Login() {
   const [error, setError] = useState("")
   const [successMessage, setSuccessMessage] = useState("")
 
-  // Function to handle navigation
-  const navigateToDashboard = async () => {
-    try {
-      setSuccessMessage("Login successful! Redirecting to dashboard...")
-      
-      // Force a router refresh and navigation
-      router.refresh()
-      router.prefetch('/dashboard')
-      
-      // Try both navigation methods
-      setTimeout(() => {
-        console.log("Attempting navigation to dashboard...")
-        router.push('/dashboard')
-        
-        // Fallback to window.location if router doesn't work
-        setTimeout(() => {
-          if (window.location.pathname !== '/dashboard') {
-            console.log("Fallback: using window.location for navigation")
-            window.location.href = '/dashboard'
-          }
-        }, 500)
-      }, 1000)
-    } catch (error) {
-      console.error("Navigation error:", error)
-      // Final fallback
-      window.location.href = '/dashboard'
+  useEffect(() => {
+    // Check if we already have a session
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        console.log("Existing session found, redirecting to dashboard")
+        router.replace("/dashboard")
+      }
     }
-  }
+    checkSession()
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,6 +40,9 @@ export default function Login() {
 
     try {
       console.log("Starting login process...")
+
+      // Clear any existing sessions first
+      await supabase.auth.signOut()
 
       // Attempt to sign in
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -79,32 +65,21 @@ export default function Login() {
         expires_at: new Date(data.session.expires_at!).toLocaleString()
       })
 
-      // Store the session in localStorage for backup
-      localStorage.setItem('supabase.auth.token', JSON.stringify(data.session))
+      setSuccessMessage("Login successful! Redirecting to dashboard...")
 
-      // Double check the session
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
+      // Wait a moment for the session to be properly set
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-      if (sessionError) {
-        console.error("Session verification error:", sessionError)
-        throw sessionError
+      // Verify the session was set
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        console.error("Session verification failed:", sessionError)
+        throw new Error("Failed to establish session")
       }
 
-      if (!session) {
-        console.error("No session found during verification")
-        throw new Error("Session not established")
-      }
-
-      console.log("Session verified successfully:", {
-        user: session.user.email,
-        expires_at: new Date(session.expires_at!).toLocaleString()
-      })
-
-      // Navigate to dashboard
-      await navigateToDashboard()
+      // Force a hard navigation to dashboard
+      window.location.href = "/dashboard"
     } catch (err: any) {
       console.error("Login process error:", err)
       setError(err.message || "Failed to sign in")

@@ -3,22 +3,13 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   try {
-    // Verify environment variables
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Missing Supabase environment variables')
-      return NextResponse.next()
-    }
-
     // Create a response object that we can modify
     const response = NextResponse.next()
 
     // Create the Supabase client
     const supabase = createServerClient(
-      supabaseUrl,
-      supabaseAnonKey,
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name: string) {
@@ -30,20 +21,18 @@ export async function middleware(request: NextRequest) {
               name,
               value,
               ...options,
-              // Ensure the cookie is accessible in the browser
-              httpOnly: false,
+              // Ensure the cookie is accessible
+              httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
               sameSite: 'lax',
               path: '/'
             })
           },
           remove(name: string, options: CookieOptions) {
-            // Remove the cookie from the response
-            response.cookies.set({
+            // Remove the cookie
+            response.cookies.delete({
               name,
-              value: '',
               ...options,
-              maxAge: 0,
               path: '/'
             })
           },
@@ -51,34 +40,43 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    try {
-      // Get the user's session
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      // Public routes that don't require authentication
-      const publicRoutes = ['/login', '/signup', '/']
-      const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname)
-      
-      // If there's no session and the route requires auth, redirect to login
-      if (!session && !isPublicRoute) {
-        return NextResponse.redirect(new URL('/login', request.url))
-      }
+    // Get the session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
-      // If there's a session and we're on a public route (except /), redirect to dashboard
-      if (session && isPublicRoute && request.nextUrl.pathname !== '/') {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-      }
+    // Log the session state for debugging
+    console.log('Middleware session check:', {
+      path: request.nextUrl.pathname,
+      hasSession: !!session,
+      error: sessionError?.message
+    })
 
-      // For all other cases, proceed with the request
-      return response
-    } catch (error) {
-      console.error('Auth error:', error)
-      // On auth error, allow access to public routes, redirect others to login
-      if (!['/login', '/signup', '/'].includes(request.nextUrl.pathname)) {
+    // Public routes that don't require authentication
+    const publicRoutes = ['/login', '/signup', '/']
+    const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname)
+
+    if (sessionError) {
+      console.error('Middleware session error:', sessionError)
+      // On session error, allow access to public routes, redirect others to login
+      if (!isPublicRoute) {
         return NextResponse.redirect(new URL('/login', request.url))
       }
       return response
     }
+
+    // If there's no session and the route requires auth, redirect to login
+    if (!session && !isPublicRoute) {
+      console.log('No session, redirecting to login')
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    // If there's a session and we're on a public route (except /), redirect to dashboard
+    if (session && isPublicRoute && request.nextUrl.pathname !== '/') {
+      console.log('Has session on public route, redirecting to dashboard')
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+
+    // For all other cases, proceed with the request
+    return response
   } catch (error) {
     console.error('Middleware error:', error)
     return NextResponse.next()
