@@ -18,16 +18,25 @@ export default function Login() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
+
+  // Function to handle navigation with a delay
+  const navigateToDashboard = () => {
+    setSuccessMessage("Login successful! Redirecting to dashboard...")
+    // Add a small delay before navigation to ensure state updates are visible
+    setTimeout(() => {
+      window.location.href = "/dashboard"
+    }, 1000)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setSuccessMessage("")
     setIsLoading(true)
 
     try {
-      // First, check if the user exists
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      console.log("Current user:", user)
+      console.log("Starting login process...")
 
       // Attempt to sign in
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -45,31 +54,38 @@ export default function Login() {
         throw new Error("Failed to create session")
       }
 
-      console.log("Sign in successful:", data.session)
+      console.log("Sign in successful, session created:", {
+        user: data.session.user.email,
+        expires_at: new Date(data.session.expires_at!).toLocaleString()
+      })
 
-      // Update the session
+      // Double check the session
       const {
         data: { session },
         error: sessionError,
       } = await supabase.auth.getSession()
 
       if (sessionError) {
-        console.error("Session error:", sessionError)
+        console.error("Session verification error:", sessionError)
         throw sessionError
       }
 
       if (!session) {
-        console.error("No session found after getSession")
+        console.error("No session found during verification")
         throw new Error("Session not established")
       }
 
-      console.log("Session established:", session)
+      console.log("Session verified successfully:", {
+        user: session.user.email,
+        expires_at: new Date(session.expires_at!).toLocaleString()
+      })
 
-      // Force a hard navigation to the dashboard
-      window.location.href = "/dashboard"
+      // Navigate to dashboard with delay
+      navigateToDashboard()
     } catch (err: any) {
       console.error("Login process error:", err)
       setError(err.message || "Failed to sign in")
+      setSuccessMessage("")
     } finally {
       setIsLoading(false)
     }
@@ -114,6 +130,7 @@ export default function Login() {
               />
             </div>
             {error && <div className="mt-4 text-sm text-red-500">{error}</div>}
+            {successMessage && <div className="mt-4 text-sm text-green-500">{successMessage}</div>}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>

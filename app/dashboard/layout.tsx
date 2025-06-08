@@ -1,11 +1,11 @@
 "use client"
 
-import type React from "react"
-import Link from "next/link"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Award, Bell, BookOpen, Calendar, FileText, Home, LogOut, Settings, Shield, User } from "lucide-react"
+import Link from "next/link"
 
 export default function DashboardLayout({
   children,
@@ -13,6 +13,48 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error("Auth error:", error)
+          throw error
+        }
+
+        if (!session) {
+          console.log("No session found, redirecting to login")
+          router.replace("/login")
+          return
+        }
+
+        console.log("Session found:", {
+          user: session.user.email,
+          expires_at: new Date(session.expires_at!).toLocaleString()
+        })
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Dashboard auth error:", error)
+        router.replace("/login")
+      }
+    }
+
+    checkAuth()
+  }, [router])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
