@@ -16,31 +16,25 @@ export default function DashboardLayout({
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    console.log("Dashboard layout mounted, checking auth...")
+    console.log("Dashboard layout mounted")
     
     const checkAuth = async () => {
       try {
-        // Try to get session from localStorage first
-        const storedSession = localStorage.getItem('supabase.auth.token')
-        if (storedSession) {
-          console.log("Found stored session:", JSON.parse(storedSession))
-        }
-
-        // Get current session from Supabase
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error("Auth error in dashboard:", error)
-          throw error
-        }
-
-        if (!session) {
-          console.log("No session found in dashboard, redirecting to login")
-          router.replace("/login")
+          console.error("Dashboard session error:", error)
+          window.location.href = "/login"
           return
         }
 
-        console.log("Valid session found in dashboard:", {
+        if (!session) {
+          console.log("No session in dashboard, redirecting to login")
+          window.location.href = "/login"
+          return
+        }
+
+        console.log("Valid session in dashboard:", {
           user: session.user.email,
           expires_at: new Date(session.expires_at!).toLocaleString()
         })
@@ -49,9 +43,9 @@ export default function DashboardLayout({
         const {
           data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
-          console.log("Auth state changed:", event, session?.user?.email)
+          console.log("Auth state changed in dashboard:", event, session?.user?.email)
           if (event === 'SIGNED_OUT' || !session) {
-            router.replace('/login')
+            window.location.href = "/login"
           }
         })
 
@@ -63,12 +57,12 @@ export default function DashboardLayout({
         }
       } catch (error) {
         console.error("Dashboard auth error:", error)
-        router.replace("/login")
+        window.location.href = "/login"
       }
     }
 
     checkAuth()
-  }, [router])
+  }, [])
 
   if (isLoading) {
     return (

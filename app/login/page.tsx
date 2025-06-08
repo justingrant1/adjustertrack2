@@ -20,17 +20,31 @@ export default function Login() {
   const [error, setError] = useState("")
   const [successMessage, setSuccessMessage] = useState("")
 
+  // Function to handle navigation
+  const navigateToDashboard = () => {
+    console.log("Attempting navigation to dashboard...")
+    window.location.href = "/dashboard"
+  }
+
   useEffect(() => {
-    // Check if we already have a session
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        console.log("Existing session found, redirecting to dashboard")
-        router.replace("/dashboard")
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) throw error
+        
+        if (session) {
+          console.log("Session found in login page:", {
+            user: session.user.email,
+            expires_at: new Date(session.expires_at!).toLocaleString()
+          })
+          navigateToDashboard()
+        }
+      } catch (error) {
+        console.error("Error checking session:", error)
       }
     }
     checkSession()
-  }, [router])
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,49 +53,35 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      console.log("Starting login process...")
-
-      // Clear any existing sessions first
+      // Sign out first to clear any existing sessions
       await supabase.auth.signOut()
-
+      
       // Attempt to sign in
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
       })
 
-      if (signInError) {
-        console.error("Sign in error:", signInError)
-        throw signInError
-      }
+      if (signInError) throw signInError
 
       if (!data?.session) {
-        console.error("No session after sign in")
-        throw new Error("Failed to create session")
+        throw new Error("No session created")
       }
 
-      console.log("Sign in successful, session created:", {
+      console.log("Login successful:", {
         user: data.session.user.email,
         expires_at: new Date(data.session.expires_at!).toLocaleString()
       })
 
-      setSuccessMessage("Login successful! Redirecting to dashboard...")
-
-      // Wait a moment for the session to be properly set
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Verify the session was set
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      setSuccessMessage("Login successful! Redirecting...")
       
-      if (sessionError || !session) {
-        console.error("Session verification failed:", sessionError)
-        throw new Error("Failed to establish session")
-      }
-
-      // Force a hard navigation to dashboard
-      window.location.href = "/dashboard"
+      // Wait for session to be set
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Navigate to dashboard
+      navigateToDashboard()
     } catch (err: any) {
-      console.error("Login process error:", err)
+      console.error("Login error:", err)
       setError(err.message || "Failed to sign in")
       setSuccessMessage("")
     } finally {
