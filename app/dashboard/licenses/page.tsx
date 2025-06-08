@@ -302,85 +302,64 @@ export default function LicensesPage() {
         </TabsList>
         <TabsContent value="active" className="space-y-4">
           {filteredLicenses.length > 0 ? (
-            filteredLicenses.map((license) => (
-              <Card key={license.id}>
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-full bg-primary/10 p-3">
-                        <Award className="h-6 w-6 text-primary" />
+            filteredLicenses.map((license) => {
+              // TODO: Replace with actual CE credits calculation
+              const ceCompleted = 0;
+              const ceRequired = license.ce_requirement || 0;
+              return (
+                <Card key={license.id} className="mb-6">
+                  <CardContent className="flex flex-col md:flex-row items-center justify-between gap-6 p-8">
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                      <div className="rounded-full bg-gray-100 p-4">
+                        <Award className="h-8 w-8 text-gray-700" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-lg">
-                          {license.state} - {license.license_type}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">License #: {license.license_number}</p>
-                        <div className="flex flex-wrap gap-4 mt-2">
+                        <h3 className="font-bold text-xl mb-1">{license.state} - {license.license_type}</h3>
+                        <p className="text-md text-gray-700 mb-2">License #: {license.license_number}</p>
+                        <div className="flex gap-8 text-sm text-gray-700 mb-2">
                           <div>
-                            <p className="text-xs text-muted-foreground">Expiration Date</p>
-                            <p className="text-sm">{new Date(license.expiration_date).toLocaleDateString()}</p>
+                            <div className="font-medium">Issue Date</div>
+                            <div>8/14/2023</div>
                           </div>
                           <div>
-                            <p className="text-xs text-muted-foreground">CE Progress</p>
-                            <Progress value={0} max={license.ce_requirement} className="w-40 h-2" />
-                            <p className="text-xs">{/* TODO: Show actual credits completed */}0/{license.ce_requirement} credits</p>
+                            <div className="font-medium">Expiration Date</div>
+                            <div>{new Date(license.expiration_date).toLocaleDateString()}</div>
+                          </div>
+                          <div>
+                            <div className="font-medium">Status</div>
+                            <span className="inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col justify-between">
-                      <div className="flex flex-wrap gap-2 justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => handleViewLicense(license)}
-                        >
-                          <FileText className="h-4 w-4" />
-                          View
+                    <div className="flex-1 flex flex-col items-end justify-between w-full md:w-auto">
+                      <div className="flex items-center justify-between w-full md:w-96 mb-2">
+                        <span className="font-medium">CE Progress</span>
+                        <span className="text-sm">{ceCompleted}/{ceRequired} credits</span>
+                      </div>
+                      <Progress value={ceCompleted} max={ceRequired} className="w-full md:w-96 h-3 rounded-full bg-gray-200" />
+                      <div className="flex gap-2 mt-4">
+                        <Button variant="outline" size="sm" className="gap-1" onClick={() => handleViewLicense(license)}>
+                          <FileText className="h-4 w-4" /> View
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => handleEditLicense(license)}
-                        >
-                          <Edit className="h-4 w-4" />
-                          Edit
+                        <Button variant="outline" size="sm" className="gap-1" onClick={() => handleEditLicense(license)}>
+                          <Edit className="h-4 w-4" /> Edit
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => handleRenewLicense(license)}
-                        >
-                          <Calendar className="h-4 w-4" />
-                          Renew
+                        <Button variant="outline" size="sm" className="gap-1" onClick={() => handleRenewLicense(license)}>
+                          <Calendar className="h-4 w-4" /> Renew
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => handleExportLicense(license)}
-                        >
-                          <Download className="h-4 w-4" />
-                          Export
+                        <Button variant="outline" size="sm" className="gap-1" onClick={() => handleExportLicense(license)}>
+                          <Download className="h-4 w-4" /> Export
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => handleDeleteLicense(license)}
-                        >
-                          <Trash className="h-4 w-4" />
-                          Delete
+                        <Button variant="destructive" size="sm" className="gap-1" onClick={() => handleDeleteLicense(license)}>
+                          <Trash className="h-4 w-4" /> Delete
                         </Button>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                </Card>
+              );
+            })
           ) : (
             <Card>
               <CardContent className="p-6 text-center">
