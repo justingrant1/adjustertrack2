@@ -1,10 +1,8 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,57 +11,11 @@ import { Label } from "@/components/ui/label"
 import { Shield } from "lucide-react"
 
 export default function Login() {
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [successMessage, setSuccessMessage] = useState("")
-
-  // Function to validate session
-  const isValidSession = (session: any) => {
-    if (!session || !session.expires_at) return false
-    
-    const now = Date.now()
-    const expiresAt = new Date(session.expires_at * 1000).getTime()
-    
-    console.log("Session validation:", {
-      now: new Date(now).toLocaleString(),
-      expires_at: new Date(expiresAt).toLocaleString(),
-      isValid: expiresAt > now
-    })
-    
-    return expiresAt > now
-  }
-
-  // Function to handle navigation
-  const navigateToDashboard = () => {
-    console.log("Attempting navigation to dashboard...")
-    window.location.href = "/dashboard"
-  }
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        if (error) throw error
-        
-        if (session && isValidSession(session)) {
-          console.log("Valid session found in login page:", {
-            user: session.user.email,
-            expires_at: session.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'unknown'
-          })
-          navigateToDashboard()
-        } else if (session) {
-          console.log("Expired session found, signing out...")
-          await supabase.auth.signOut()
-        }
-      } catch (error) {
-        console.error("Error checking session:", error)
-      }
-    }
-    checkSession()
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,38 +24,38 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      // Sign out first to clear any existing sessions
+      console.log("Starting login process...")
+
+      // Clear any existing sessions
       await supabase.auth.signOut()
-      
+
       // Attempt to sign in
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
       })
 
-      if (signInError) throw signInError
+      if (signInError) {
+        console.error("Sign in error:", signInError)
+        throw signInError
+      }
 
       if (!data?.session) {
         throw new Error("No session created")
       }
 
-      // Validate the new session
-      if (!isValidSession(data.session)) {
-        throw new Error("Invalid session created")
-      }
-
       console.log("Login successful:", {
         user: data.session.user.email,
-        expires_at: data.session.expires_at ? new Date(data.session.expires_at * 1000).toLocaleString() : 'unknown'
+        sessionId: data.session.access_token.substring(0, 10) + "..."
       })
 
       setSuccessMessage("Login successful! Redirecting...")
-      
-      // Wait for session to be set
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Navigate to dashboard
-      navigateToDashboard()
+
+      // Simple delay then navigate
+      setTimeout(() => {
+        window.location.href = "/dashboard"
+      }, 1000)
+
     } catch (err: any) {
       console.error("Login error:", err)
       setError(err.message || "Failed to sign in")

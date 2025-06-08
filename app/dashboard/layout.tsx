@@ -14,30 +14,17 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
-
-  // Function to validate session
-  const isValidSession = (session: any) => {
-    if (!session || !session.expires_at) return false
-    
-    const now = Date.now()
-    const expiresAt = new Date(session.expires_at * 1000).getTime()
-    
-    console.log("Dashboard session validation:", {
-      now: new Date(now).toLocaleString(),
-      expires_at: new Date(expiresAt).toLocaleString(),
-      isValid: expiresAt > now
-    })
-    
-    return expiresAt > now
-  }
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
-    console.log("Dashboard layout mounted")
-    
+    let mounted = true
+
     const checkAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
         
+        if (!mounted) return
+
         if (error) {
           console.error("Dashboard session error:", error)
           window.location.href = "/login"
@@ -50,41 +37,25 @@ export default function DashboardLayout({
           return
         }
 
-        if (!isValidSession(session)) {
-          console.log("Expired session in dashboard, signing out and redirecting")
-          await supabase.auth.signOut()
-          window.location.href = "/login"
-          return
-        }
-
         console.log("Valid session in dashboard:", {
-          user: session.user.email,
-          expires_at: session.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'unknown'
+          user: session.user.email
         })
 
-        // Set up auth state change listener
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange((event, session) => {
-          console.log("Auth state changed in dashboard:", event, session?.user?.email)
-          if (event === 'SIGNED_OUT' || !session || !isValidSession(session)) {
-            window.location.href = "/login"
-          }
-        })
-
+        setIsAuthenticated(true)
         setIsLoading(false)
-
-        // Cleanup subscription
-        return () => {
-          subscription.unsubscribe()
-        }
       } catch (error) {
         console.error("Dashboard auth error:", error)
-        window.location.href = "/login"
+        if (mounted) {
+          window.location.href = "/login"
+        }
       }
     }
 
     checkAuth()
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
   if (isLoading) {
@@ -96,6 +67,10 @@ export default function DashboardLayout({
         </div>
       </div>
     )
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   const handleLogout = async () => {
