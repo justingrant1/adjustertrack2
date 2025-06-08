@@ -38,7 +38,6 @@ type License = {
   license_number: string
   license_type: string
   expiration_date: string
-  notes: string
 }
 
 export default function LicensesPage() {
@@ -54,7 +53,6 @@ export default function LicensesPage() {
     license_number: "",
     license_type: "",
     expiration_date: "",
-    notes: "",
   })
   const [editFormData, setEditFormData] = useState<Partial<License>>({})
   const [licenses, setLicenses] = useState<License[]>([])
@@ -139,7 +137,6 @@ export default function LicensesPage() {
       .from('licenses')
       .update({
         expiration_date: newExpDate.toISOString().split("T")[0],
-        notes: (selectedLicense.notes || "") + " Renewed on " + new Date().toLocaleDateString() + ".",
       })
       .eq('id', selectedLicense.id)
 
@@ -211,7 +208,6 @@ export default function LicensesPage() {
         license_number: "",
         license_type: "",
         expiration_date: "",
-        notes: "",
       })
     }
   }
@@ -253,10 +249,6 @@ export default function LicensesPage() {
                     <Label htmlFor="expirationDate">Expiration Date</Label>
                     <Input id="expirationDate" type="date" value={newLicenseFormData.expiration_date} onChange={(e) => setNewLicenseFormData({ ...newLicenseFormData, expiration_date: e.target.value })} />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea id="notes" value={newLicenseFormData.notes} onChange={(e) => setNewLicenseFormData({ ...newLicenseFormData, notes: e.target.value })} />
                 </div>
               </div>
               <DialogFooter>
@@ -409,10 +401,6 @@ export default function LicensesPage() {
                   <p>{new Date(selectedLicense.expiration_date).toLocaleDateString()}</p>
                 </div>
               </div>
-              <div>
-                <h3 className="text-sm font-medium mb-1">Notes</h3>
-                <p className="text-sm text-muted-foreground">{selectedLicense.notes || "No notes available."}</p>
-              </div>
             </div>
             <DialogFooter>
               <Button onClick={() => setIsViewOpen(false)}>Close</Button>
@@ -466,17 +454,6 @@ export default function LicensesPage() {
                     onChange={(e) => setEditFormData({ ...editFormData, expiration_date: e.target.value })}
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-notes">Notes</Label>
-                <Textarea
-                  id="edit-notes"
-                  value={editFormData.notes}
-                  onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
-                  placeholder="Add any notes about this license"
-                />
               </div>
             </div>
             <DialogFooter>
