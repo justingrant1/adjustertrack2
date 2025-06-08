@@ -39,6 +39,7 @@ type License = {
   license_type: string
   expiration_date: string
   notes?: string
+  ce_requirement: number
 }
 
 export default function LicensesPage() {
@@ -55,6 +56,7 @@ export default function LicensesPage() {
     license_type: "",
     expiration_date: "",
     notes: "",
+    ce_requirement: 0,
   })
   const [editFormData, setEditFormData] = useState<Partial<License>>({})
   const [licenses, setLicenses] = useState<License[]>([])
@@ -212,6 +214,7 @@ export default function LicensesPage() {
         license_type: "",
         expiration_date: "",
         notes: "",
+        ce_requirement: 0,
       })
     }
   }
@@ -253,6 +256,17 @@ export default function LicensesPage() {
                     <Label htmlFor="expirationDate">Expiration Date</Label>
                     <Input id="expirationDate" type="date" value={newLicenseFormData.expiration_date} onChange={(e) => setNewLicenseFormData({ ...newLicenseFormData, expiration_date: e.target.value })} />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ceRequirement">CE Requirement (Credits)</Label>
+                  <Input
+                    id="ceRequirement"
+                    type="number"
+                    min={0}
+                    value={newLicenseFormData.ce_requirement}
+                    onChange={(e) => setNewLicenseFormData({ ...newLicenseFormData, ce_requirement: Number(e.target.value) })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
@@ -305,6 +319,11 @@ export default function LicensesPage() {
                           <div>
                             <p className="text-xs text-muted-foreground">Expiration Date</p>
                             <p className="text-sm">{new Date(license.expiration_date).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">CE Progress</p>
+                            <Progress value={0} max={license.ce_requirement} className="w-40 h-2" />
+                            <p className="text-xs">{/* TODO: Show actual credits completed */}0/{license.ce_requirement} credits</p>
                           </div>
                         </div>
                       </div>
