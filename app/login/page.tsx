@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -19,21 +19,45 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.push("/dashboard")
+      }
+    }
+    checkSession()
+  }, [router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    setIsLoading(false)
-    if (error) {
-      setError(error.message)
-    } else {
+      if (signInError) {
+        console.error("Login error:", signInError)
+        throw signInError
+      }
+
+      if (!data.session) {
+        throw new Error("No session created after login")
+      }
+
+      // Force a router refresh to update the session state
+      router.refresh()
       router.push("/dashboard")
+    } catch (err: any) {
+      console.error("Login error:", err)
+      setError(err.message || "Failed to sign in")
+    } finally {
+      setIsLoading(false)
     }
   }
 

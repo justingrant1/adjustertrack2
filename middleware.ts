@@ -12,12 +12,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    let response = NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    })
+    // Create a response object that we can modify
+    const response = NextResponse.next()
 
+    // Create the Supabase client
     const supabase = createServerClient(
       supabaseUrl,
       supabaseAnonKey,
@@ -27,37 +25,26 @@ export async function middleware(request: NextRequest) {
             return request.cookies.get(name)?.value
           },
           set(name: string, value: string, options: CookieOptions) {
-            request.cookies.set({
-              name,
-              value,
-              ...options,
-            })
-            response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
-            })
+            // Set the cookie in the response
             response.cookies.set({
               name,
               value,
               ...options,
+              // Ensure the cookie is accessible in the browser
+              httpOnly: false,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              path: '/'
             })
           },
           remove(name: string, options: CookieOptions) {
-            request.cookies.set({
-              name,
-              value: '',
-              ...options,
-            })
-            response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
-            })
+            // Remove the cookie from the response
             response.cookies.set({
               name,
               value: '',
               ...options,
+              maxAge: 0,
+              path: '/'
             })
           },
         },
@@ -65,21 +52,33 @@ export async function middleware(request: NextRequest) {
     )
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      // Get the user's session
+      const { data: { session } } = await supabase.auth.getSession()
       
-      // if user is not signed in and the current path is not /login, /signup, or /, redirect the user to /login
-      if (!user && !['/login', '/signup', '/'].includes(request.nextUrl.pathname)) {
+      // Public routes that don't require authentication
+      const publicRoutes = ['/login', '/signup', '/']
+      const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname)
+      
+      // If there's no session and the route requires auth, redirect to login
+      if (!session && !isPublicRoute) {
         return NextResponse.redirect(new URL('/login', request.url))
       }
+
+      // If there's a session and we're on a public route (except /), redirect to dashboard
+      if (session && isPublicRoute && request.nextUrl.pathname !== '/') {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
+
+      // For all other cases, proceed with the request
+      return response
     } catch (error) {
-      console.error('Error getting user:', error)
-      // On auth error, redirect to login
+      console.error('Auth error:', error)
+      // On auth error, allow access to public routes, redirect others to login
       if (!['/login', '/signup', '/'].includes(request.nextUrl.pathname)) {
         return NextResponse.redirect(new URL('/login', request.url))
       }
+      return response
     }
-
-    return response
   } catch (error) {
     console.error('Middleware error:', error)
     return NextResponse.next()
