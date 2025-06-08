@@ -16,26 +16,51 @@ export default function DashboardLayout({
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    console.log("Dashboard layout mounted, checking auth...")
+    
     const checkAuth = async () => {
       try {
+        // Try to get session from localStorage first
+        const storedSession = localStorage.getItem('supabase.auth.token')
+        if (storedSession) {
+          console.log("Found stored session:", JSON.parse(storedSession))
+        }
+
+        // Get current session from Supabase
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error("Auth error:", error)
+          console.error("Auth error in dashboard:", error)
           throw error
         }
 
         if (!session) {
-          console.log("No session found, redirecting to login")
+          console.log("No session found in dashboard, redirecting to login")
           router.replace("/login")
           return
         }
 
-        console.log("Session found:", {
+        console.log("Valid session found in dashboard:", {
           user: session.user.email,
           expires_at: new Date(session.expires_at!).toLocaleString()
         })
+
+        // Set up auth state change listener
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange((event, session) => {
+          console.log("Auth state changed:", event, session?.user?.email)
+          if (event === 'SIGNED_OUT' || !session) {
+            router.replace('/login')
+          }
+        })
+
         setIsLoading(false)
+
+        // Cleanup subscription
+        return () => {
+          subscription.unsubscribe()
+        }
       } catch (error) {
         console.error("Dashboard auth error:", error)
         router.replace("/login")
@@ -50,7 +75,7 @@ export default function DashboardLayout({
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+          <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     )

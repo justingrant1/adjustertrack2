@@ -20,13 +20,33 @@ export default function Login() {
   const [error, setError] = useState("")
   const [successMessage, setSuccessMessage] = useState("")
 
-  // Function to handle navigation with a delay
-  const navigateToDashboard = () => {
-    setSuccessMessage("Login successful! Redirecting to dashboard...")
-    // Add a small delay before navigation to ensure state updates are visible
-    setTimeout(() => {
-      window.location.href = "/dashboard"
-    }, 1000)
+  // Function to handle navigation
+  const navigateToDashboard = async () => {
+    try {
+      setSuccessMessage("Login successful! Redirecting to dashboard...")
+      
+      // Force a router refresh and navigation
+      router.refresh()
+      router.prefetch('/dashboard')
+      
+      // Try both navigation methods
+      setTimeout(() => {
+        console.log("Attempting navigation to dashboard...")
+        router.push('/dashboard')
+        
+        // Fallback to window.location if router doesn't work
+        setTimeout(() => {
+          if (window.location.pathname !== '/dashboard') {
+            console.log("Fallback: using window.location for navigation")
+            window.location.href = '/dashboard'
+          }
+        }, 500)
+      }, 1000)
+    } catch (error) {
+      console.error("Navigation error:", error)
+      // Final fallback
+      window.location.href = '/dashboard'
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,6 +79,9 @@ export default function Login() {
         expires_at: new Date(data.session.expires_at!).toLocaleString()
       })
 
+      // Store the session in localStorage for backup
+      localStorage.setItem('supabase.auth.token', JSON.stringify(data.session))
+
       // Double check the session
       const {
         data: { session },
@@ -80,8 +103,8 @@ export default function Login() {
         expires_at: new Date(session.expires_at!).toLocaleString()
       })
 
-      // Navigate to dashboard with delay
-      navigateToDashboard()
+      // Navigate to dashboard
+      await navigateToDashboard()
     } catch (err: any) {
       console.error("Login process error:", err)
       setError(err.message || "Failed to sign in")
