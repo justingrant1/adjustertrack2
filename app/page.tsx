@@ -54,7 +54,7 @@ export default function Home() {
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link href="#demo">
+                  <Link href="/demo">
                     <Button size="lg" variant="outline" className="w-full">
                       View Demo
                     </Button>
