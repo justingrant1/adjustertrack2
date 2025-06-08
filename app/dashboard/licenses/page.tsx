@@ -40,9 +40,7 @@ type License = {
   expiration_date: string
   issue_date: string
   ce_required: number
-  ce_completed: number
   notes: string
-  status: string
 }
 
 export default function LicensesPage() {
@@ -145,7 +143,6 @@ export default function LicensesPage() {
       .from('licenses')
       .update({
         expiration_date: newExpDate.toISOString().split("T")[0],
-        ce_completed: 0,
         notes: (selectedLicense.notes || "") + " Renewed on " + new Date().toLocaleDateString() + ".",
       })
       .eq('id', selectedLicense.id)
@@ -205,7 +202,7 @@ export default function LicensesPage() {
     if (!user) return
 
     const { error } = await supabase.from('licenses').insert([
-      { ...newLicenseFormData, user_id: user.id, status: 'Active', ce_completed: 0 },
+      { ...newLicenseFormData, user_id: user.id },
     ])
 
     if (error) {
@@ -327,25 +324,10 @@ export default function LicensesPage() {
                             <p className="text-xs text-muted-foreground">Expiration Date</p>
                             <p className="text-sm">{new Date(license.expiration_date).toLocaleDateString()}</p>
                           </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Status</p>
-                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800">
-                              {license.status}
-                            </span>
-                          </div>
                         </div>
                       </div>
                     </div>
                     <div className="flex flex-col justify-between">
-                      <div className="space-y-1 mb-4">
-                        <div className="flex items-center justify-between text-sm">
-                          <p>CE Progress</p>
-                          <p>
-                            {license.ce_completed}/{license.ce_required} credits
-                          </p>
-                        </div>
-                        <Progress value={(license.ce_completed / license.ce_required) * 100} />
-                      </div>
                       <div className="flex flex-wrap gap-2 justify-end">
                         <Button
                           variant="outline"
@@ -438,12 +420,6 @@ export default function LicensesPage() {
                   <h3 className="text-sm font-medium mb-1">License Number</h3>
                   <p>{selectedLicense.license_number}</p>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium mb-1">Status</h3>
-                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800">
-                    {selectedLicense.status}
-                  </span>
-                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -459,12 +435,11 @@ export default function LicensesPage() {
                 <h3 className="text-sm font-medium mb-1">CE Requirements</h3>
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
-                    <p>Progress</p>
+                    <p>Required</p>
                     <p>
-                      {selectedLicense.ce_completed}/{selectedLicense.ce_required} credits
+                      {selectedLicense.ce_required} credits
                     </p>
                   </div>
-                  <Progress value={(selectedLicense.ce_completed / selectedLicense.ce_required) * 100} />
                 </div>
               </div>
               <div>
@@ -543,16 +518,6 @@ export default function LicensesPage() {
                     min="0"
                     value={editFormData.ce_required}
                     onChange={(e) => setEditFormData({ ...editFormData, ce_required: Number(e.target.value) })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-ceCompleted">CE Completed</Label>
-                  <Input
-                    id="edit-ceCompleted"
-                    type="number"
-                    min="0"
-                    value={editFormData.ce_completed}
-                    onChange={(e) => setEditFormData({ ...editFormData, ce_completed: Number(e.target.value) })}
                   />
                 </div>
               </div>
