@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Metadata } from 'next'
 import {
   ArrowRight,
   Award,
@@ -18,6 +19,35 @@ import {
   FileText,
   Zap,
 } from "lucide-react"
+
+export const metadata: Metadata = {
+  title: 'AdjusterTrack - #1 Insurance Adjuster License Management Software | Track CE Credits & Renewals',
+  description: 'Professional license management software for insurance adjusters. Track licenses across all 50 states, manage CE credits, get automated renewal reminders. 30-day free trial. Join 10,000+ professionals.',
+  keywords: 'insurance adjuster license tracking, adjuster license management software, CE credit tracking, license renewal reminders, continuing education management, multi-state license tracking, adjuster compliance software, insurance license renewal system',
+  openGraph: {
+    title: 'AdjusterTrack - Never Miss a License Renewal Again',
+    description: 'Join 10,000+ insurance professionals using AdjusterTrack to manage licenses, track CE credits, and stay compliant across all states.',
+    url: 'https://adjustertrack.com',
+    type: 'website',
+    images: [
+      {
+        url: 'https://adjustertrack.com/og-homepage.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'AdjusterTrack Homepage - Insurance Adjuster License Management',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AdjusterTrack - Never Miss a License Renewal Again',
+    description: 'Professional license management for insurance adjusters. Track licenses, manage CE credits, get reminders.',
+    images: ['https://adjustertrack.com/twitter-homepage.jpg'],
+  },
+  alternates: {
+    canonical: 'https://adjustertrack.com',
+  },
+}
 
 export default function Home() {
   return (
