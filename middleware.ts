@@ -64,7 +64,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // if user is not signed in and the current path is not /login or /demo, redirect the user to /login
-  if (!user && !['/login', '/demo'].includes(request.nextUrl.pathname)) {
+  // Allow public access to sitemap, robots, signup, and homepage
+  const publicPaths = ['/login', '/demo', '/sitemap.xml', '/robots.txt', '/signup', '/', '/privacy', '/terms', '/contact']
+  const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path))
+  
+  if (!user && !isPublicPath) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -78,8 +82,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - sitemap.xml (sitemap file)
+     * - robots.txt (robots file)
      * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
 }
