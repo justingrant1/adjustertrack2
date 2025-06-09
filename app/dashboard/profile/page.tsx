@@ -66,18 +66,18 @@ export default function ProfilePage() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
 
   // Handle profile form changes
-  const handleProfileChange = (e) => {
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setProfile((prev) => ({ ...prev, [name]: value }))
   }
 
   // Handle settings toggle
-  const handleSettingToggle = (setting) => {
-    setSettings((prev) => ({ ...prev, [setting]: !prev[setting] }))
+  const handleSettingToggle = (setting: string) => {
+    setSettings((prev) => ({ ...prev, [setting]: !prev[setting as keyof typeof prev] }))
   }
 
   // Handle password form changes
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setPasswordForm((prev) => ({ ...prev, [name]: value }))
   }
@@ -126,8 +126,8 @@ export default function ProfilePage() {
   }
 
   // Handle profile image change
-  const handleImageChange = (e) => {
-    const file = e.target.files[0]
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (file) {
       // In a real app, this would upload the image to your backend
       // For now, we'll just create a local URL
