@@ -23,9 +23,4 @@ Allow: /demo/settings
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://adjustertrack.com/sitemap.xml
-Sitemap: https://adjustertrack.com/sitemap-index.xml
-
-# Additional sitemaps for different content types
-Sitemap: https://adjustertrack.com/sitemap-pages.xml
-Sitemap: https://adjustertrack.com/sitemap-demo.xml 
+Sitemap: https://adjustertrack.com/sitemap.xml 

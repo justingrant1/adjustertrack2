@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable static exports for better SEO
-  output: 'standalone',
+  // Remove output standalone for development - it can interfere with dynamic routes
   
   // Compression for better performance and SEO
   compress: true,
